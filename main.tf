@@ -1,8 +1,8 @@
 terraform {
   required_providers {
     proxmox = {
-      source = "Telmate/proxmox"
-      version = "2.9.5"
+      source = "McSwainHomeNetwork/proxmox"
+      version = "2.9.6"
     }
     random = {
       source = "hashicorp/random"
@@ -89,7 +89,7 @@ resource "proxmox_vm_qemu" "vm" {
   force_recreate_on_change_of = join(":", [local.pxe_config, local.formatted_mac_addr])
 
   pxe = true
-  boot = "nc"
+  boot = "order=virtio0,net0"
 
   network {
     model = var.network_model
