@@ -1,22 +1,22 @@
 terraform {
   required_providers {
     proxmox = {
-      source = "McSwainHomeNetwork/proxmox"
+      source  = "McSwainHomeNetwork/proxmox"
       version = "2.9.6"
     }
     random = {
-      source = "hashicorp/random"
+      source  = "hashicorp/random"
       version = "3.1.0"
     }
     local = {
-      source = "hashicorp/local"
+      source  = "hashicorp/local"
       version = "2.1.0"
     }
   }
 }
 
 provider "proxmox" {
-  pm_api_url = "${var.proxmox_url}/api2/json"
+  pm_api_url      = "${var.proxmox_url}/api2/json"
   pm_tls_insecure = var.proxmox_tls_insecure
 }
 
@@ -25,7 +25,7 @@ resource "random_id" "mac_address" {
 }
 
 locals {
-  mac_address = join("", ["00005e", lower(random_id.mac_address.hex)])
+  mac_address = length(var.mac_address) > 0 ? lower(var.mac_address) : join("", ["00005e", lower(random_id.mac_address.hex)])
   formatted_mac_addr = join(":", [
     substr(local.mac_address, 0, 2),
     substr(local.mac_address, 2, 2),
@@ -36,16 +36,16 @@ locals {
   ])
   pxe_config = templatefile("${path.module}/MAC-XXXX.ixpe.tpl", {
     custom_lines = var.custom_ipxe_lines,
-    media_root = var.ipxe_media_root,
-    kernel_name = var.ipxe_kernel_name,
-    initrd_name = var.ipxe_initrd_name,
+    media_root   = var.ipxe_media_root,
+    kernel_name  = var.ipxe_kernel_name,
+    initrd_name  = var.ipxe_initrd_name,
     cmdline_args = var.ipxe_cmdline_args
   })
 }
 
 resource "local_file" "ipxe_template" {
-    content     = local.pxe_config
-    filename = "${path.module}/MAC-${local.mac_address}.ipxe"
+  content  = local.pxe_config
+  filename = "${path.module}/MAC-${local.mac_address}.ipxe"
 }
 
 resource "null_resource" "ipxe_config" {
@@ -79,30 +79,30 @@ resource "proxmox_vm_qemu" "vm" {
   target_node = var.proxmox_target_node
 
   onboot = var.start_on_boot
-  agent = var.enable_qemu_agent ? 1:0
+  agent  = var.enable_qemu_agent ? 1 : 0
 
-  memory = var.memory
+  memory  = var.memory
   balloon = var.min_memory
-  cores = var.cpu_cores
-  scsihw = var.scsi_hardware
+  cores   = var.cpu_cores
+  scsihw  = var.scsi_hardware
 
   force_recreate_on_change_of = join(":", [local.pxe_config, local.formatted_mac_addr])
 
-  pxe = true
+  pxe  = true
   boot = "order=virtio0;net0"
 
   network {
-    model = var.network_model
+    model   = var.network_model
     macaddr = local.formatted_mac_addr
-    bridge = var.network_bridge
+    bridge  = var.network_bridge
   }
 
   dynamic "disk" {
     for_each = var.disks
     content {
-      type = disk.value["type"]
+      type    = disk.value["type"]
       storage = disk.value["storage"]
-      size = disk.value["size"]
+      size    = disk.value["size"]
     }
   }
 
