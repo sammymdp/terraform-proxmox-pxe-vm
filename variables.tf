@@ -58,12 +58,7 @@ variable "scsi_hardware" {
 }
 
 variable "disks" {
-  type = list(object({ type = string, storage = string, size = string }))
-  default = [{
-    type    = "virtio",
-    storage = "local-lvm"
-    size    = "16GB"
-  }]
+  type        = list(object({ type = string, storage = string, size = string }))
   description = "The disks to add to the VM."
 }
 
@@ -112,7 +107,6 @@ variable "ipxe_server_host" {
 
 variable "ipxe_menu_path" {
   type        = string
-  default     = "/mnt/storage/netboot.xyz/config/menus"
   description = "Path on iPXE host to iPXE configs."
 }
 
