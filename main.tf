@@ -89,7 +89,7 @@ resource "proxmox_vm_qemu" "vm" {
   force_recreate_on_change_of = join(":", [local.pxe_config, local.formatted_mac_addr])
 
   pxe = true
-  boot = "order=virtio0,net0"
+  boot = "order=virtio0;net0"
 
   network {
     model = var.network_model
