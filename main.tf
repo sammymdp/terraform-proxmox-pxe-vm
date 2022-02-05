@@ -21,11 +21,11 @@ provider "proxmox" {
 }
 
 resource "random_id" "mac_address" {
-  byte_length = 8
+  byte_length = 3
 }
 
 locals {
-  mac_address = upper(random_id.mac_address.hex)
+  mac_address = join("", ["00005e", lower(random_id.mac_address.hex)])
   formatted_mac_addr = join(":", [
     substr(local.mac_address, 0, 2),
     substr(local.mac_address, 2, 2),
@@ -33,8 +33,6 @@ locals {
     substr(local.mac_address, 6, 2),
     substr(local.mac_address, 8, 2),
     substr(local.mac_address, 10, 2),
-    substr(local.mac_address, 12, 2),
-    substr(local.mac_address, 14, 2),
   ])
   pxe_config = templatefile("${path.module}/MAC-XXXX.ixpe.tpl", {
     custom_lines = var.custom_ipxe_lines,
@@ -64,6 +62,16 @@ resource "null_resource" "ipxe_config" {
       host     = var.ipxe_server_host
     }
   }
+  provisioner "file" {
+    source      = local_file.ipxe_template.filename
+    destination = "${var.ipxe_menu_path}/local/MAC-${local.mac_address}.ipxe"
+    connection {
+      type     = "ssh"
+      user     = var.ipxe_server_username
+      password = var.ipxe_server_password
+      host     = var.ipxe_server_host
+    }
+  }
 }
 
 resource "proxmox_vm_qemu" "vm" {
@@ -81,7 +89,7 @@ resource "proxmox_vm_qemu" "vm" {
   force_recreate_on_change_of = join(":", [local.pxe_config, local.formatted_mac_addr])
 
   pxe = true
-  boot = "scsi0;net0"
+  boot = "nc"
 
   network {
     model = var.network_model
