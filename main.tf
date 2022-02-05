@@ -36,7 +36,7 @@ locals {
     substr(local.mac_address, 12, 2),
     substr(local.mac_address, 14, 2),
   ])
-  pxe_config = templatefile("MAC-XXXX.ixpe.tpl", {
+  pxe_config = templatefile("${path.module}/MAC-XXXX.ixpe.tpl", {
     custom_lines = var.custom_ipxe_lines,
     media_root = var.ipxe_media_root,
     kernel_name = var.ipxe_kernel_name,
